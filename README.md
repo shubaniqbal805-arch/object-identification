@@ -21,7 +21,7 @@ Built with:
 ## Recognition modes
 
 - **Fast** and **More accurate** use COCO-SSD, which recognizes 80 predefined object classes.
-- **Detailed — wider vocabulary** is the default image-analysis mode. It uses OWLv2 to search beyond COCO-SSD's 80 classes and can take tens of seconds on an uploaded image. It downloads about 194 MB on first use. Enter up to 20 custom names to focus the search, or leave the field blank for the built-in object and food names.
+- **Detailed — wider vocabulary** is the default image-analysis mode. It uses OWLv2 to search beyond COCO-SSD's 80 classes and can take tens of seconds on an uploaded image. High-resolution uploads are scanned in overlapping close-up regions to help find smaller items, which takes longer. It downloads about 194 MB on first use. Enter up to 20 custom names to focus the search, or leave the field blank for the built-in object and food names.
 - No model can guarantee it will name every visible thing. Results depend on image quality and model accuracy.
 - The wider-vocabulary model can return false labels or overlapping boxes. Verify results, especially before relying on them.
 - Image overviews and object locations are derived from detections; the app does not infer a complete scene description or details that the model cannot see.

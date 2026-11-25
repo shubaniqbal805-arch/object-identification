@@ -40,7 +40,7 @@
   };
 
   const MAX_CANVAS_SIDE = 1600;
-  const MAX_BOXES = 50;
+  const MAX_BOXES = 100;
   const OPEN_VOCABULARY_LABELS = [
     'person', 'child', 'dog', 'cat', 'bird', 'horse', 'cow', 'sheep', 'rabbit',
     'tree', 'flower', 'potted plant', 'mushroom',
@@ -64,6 +64,34 @@
     'skateboard', 'bicycle', 'motorcycle', 'car', 'bus', 'truck', 'train',
     'building', 'house', 'bridge', 'road', 'sign', 'fence', 'gate',
     'body of water', 'mountain', 'sky', 'cloud', 'grass', 'rock',
+    'bathroom', 'bathtub', 'shower', 'toilet paper', 'soap', 'shampoo', 'towel',
+    'toothpaste', 'hairbrush', 'comb', 'washing machine', 'laundry basket',
+    'kettle', 'coffee maker', 'cutting board', 'frying pan', 'saucepan', 'cooking pot',
+    'spatula', 'whisk', 'ladle', 'tongs', 'measuring cup', 'napkin', 'paper towel',
+    'cereal', 'chips', 'candy', 'chocolate', 'ice cream', 'yogurt', 'juice', 'coffee',
+    'tea', 'soda can', 'water bottle', 'meal', 'salad', 'soup', 'meat', 'fish',
+    'shelf', 'cabinet', 'drawer', 'countertop', 'stove', 'dishwasher', 'trash can',
+    'recycling bin', 'light switch', 'electrical outlet', 'extension cord', 'battery',
+    'flashlight', 'candle', 'fire extinguisher', 'first aid kit', 'medicine bottle',
+    'guitar', 'piano', 'violin', 'drum', 'microphone', 'musical instrument',
+    'sunglasses', 'ring', 'necklace', 'bracelet', 'earrings', 'belt', 'scarf', 'glove',
+    'socks', 'boot', 'sandal', 'coat', 'sweater', 'uniform',
+    'suitcase', 'duffel bag', 'luggage', 'briefcase', 'plastic bag', 'paper bag',
+    'envelope', 'folder', 'document', 'receipt', 'card', 'coin', 'paper money',
+    'remote', 'tablet', 'smartphone', 'screen', 'monitor', 'webcam', 'memory card',
+    'tripod', 'video game console', 'power strip', 'desk chair', 'office chair',
+    'stool', 'bench', 'bookshelf', 'wardrobe', 'dresser', 'mattress',
+    'plant pot', 'flower pot', 'vase', 'decorative object', 'picture', 'painting',
+    'curtain rod', 'door handle', 'key', 'lock', 'doormat', 'shoe rack',
+    'baby stroller', 'car seat', 'wheelchair', 'walking cane', 'helmet', 'safety vest',
+    'toolbox', 'drill', 'screwdriver', 'wrench', 'pliers', 'tape measure', 'paint brush',
+    'paint can', 'broom', 'mop', 'vacuum cleaner', 'iron', 'sewing machine',
+    'basketball hoop', 'tennis racket', 'baseball bat', 'sports equipment',
+    'dog leash', 'pet bowl', 'bird cage', 'animal carrier',
+    'brick', 'wood plank', 'pipe', 'metal canister', 'bucket', 'ladder',
+    'traffic cone', 'street lamp', 'mailbox', 'parking meter', 'fire hydrant',
+    'boat', 'airplane', 'scooter', 'van', 'taxi', 'tractor', 'truck trailer',
+    'leaf', 'branch', 'log', 'stone', 'sand', 'snow', 'ice', 'water',
   ];
   const USE_CATEGORIES = {
     person: ['person', 'baby', 'child', 'woman', 'man'],
@@ -443,21 +471,50 @@
       if (!context) throw new Error('This browser could not prepare the image for detection.');
       context.drawImage(input, 0, 0, canvas.width, canvas.height);
 
-      const labels = state.customLabels.length ? state.customLabels : OPEN_VOCABULARY_LABELS;
+      const labels = state.customLabels.length
+        ? state.customLabels
+        : [...new Set(OPEN_VOCABULARY_LABELS)];
       const prompts = labels.map((label) => `a photo of ${label}`);
       const labelByPrompt = new Map(prompts.map((prompt, index) => [prompt, labels[index]]));
-      const image = state.RawImage.fromCanvas(canvas);
-      const results = await state.model(image, prompts, { threshold: 0.0001, top_k: MAX_BOXES });
-      const predictions = results.map((result) => ({
-        class: labelByPrompt.get(result.label) || result.label,
-        score: result.score,
-        bbox: [
-          result.box.xmin / scale,
-          result.box.ymin / scale,
-          (result.box.xmax - result.box.xmin) / scale,
-          (result.box.ymax - result.box.ymin) / scale,
-        ],
-      })).sort((a, b) => b.score - a.score);
+      const model = state.model;
+      if (!model) throw new Error('The object detection model is not ready.');
+      const views = [{ canvas, x: 0, y: 0 }];
+      if (state.mode === 'upload' && canvas.width >= 1200 && canvas.height >= 800) {
+        const tileWidth = Math.ceil(canvas.width * 0.65);
+        const tileHeight = Math.ceil(canvas.height * 0.65);
+        const xOffsets = [0, canvas.width - tileWidth];
+        const yOffsets = [0, canvas.height - tileHeight];
+        for (const y of yOffsets) {
+          for (const x of xOffsets) {
+            const tile = document.createElement('canvas');
+            tile.width = tileWidth;
+            tile.height = tileHeight;
+            const tileContext = tile.getContext('2d');
+            if (!tileContext) throw new Error('This browser could not prepare image close-ups.');
+            tileContext.drawImage(canvas, x, y, tileWidth, tileHeight, 0, 0, tileWidth, tileHeight);
+            views.push({ canvas: tile, x, y });
+          }
+        }
+      }
+
+      const predictions = [];
+      for (const view of views) {
+        const image = state.RawImage.fromCanvas(view.canvas);
+        const results = await model(image, prompts, { threshold: 0.0001, top_k: MAX_BOXES });
+        for (const result of results) {
+          predictions.push({
+            class: labelByPrompt.get(result.label) || result.label,
+            score: result.score,
+            bbox: [
+              (view.x + result.box.xmin) / scale,
+              (view.y + result.box.ymin) / scale,
+              (result.box.xmax - result.box.xmin) / scale,
+              (result.box.ymax - result.box.ymin) / scale,
+            ],
+          });
+        }
+      }
+      predictions.sort((a, b) => b.score - a.score);
 
       return predictions.filter((prediction, index) => !predictions.slice(0, index).some((other) => {
         const [ax, ay, aw, ah] = prediction.bbox;
@@ -510,8 +567,13 @@
       return;
     }
 
+    const usesCloseUps = state.modelType === 'open_vocabulary'
+      && img.naturalWidth * Math.min(1, MAX_CANVAS_SIDE / Math.max(img.naturalWidth, img.naturalHeight)) >= 1200
+      && img.naturalHeight * Math.min(1, MAX_CANVAS_SIDE / Math.max(img.naturalWidth, img.naturalHeight)) >= 800;
     updateResults([], state.modelType === 'open_vocabulary'
-      ? 'Wide-vocabulary analysis can take tens of seconds…'
+      ? usesCloseUps
+        ? 'Wide-vocabulary analysis of the full image and close-ups can take longer…'
+        : 'Wide-vocabulary analysis can take tens of seconds…'
       : 'Analyzing…');
     const started = performance.now();
     try {
