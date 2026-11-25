@@ -4,14 +4,14 @@ cd /d "%~dp0"
 where py >nul 2>nul
 if not errorlevel 1 (
   echo Starting local server with Python...
-  py -m http.server 8000
+  py -m http.server 8000 --bind 0.0.0.0
   exit /b %errorlevel%
 )
 
 where python >nul 2>nul
 if not errorlevel 1 (
   echo Starting local server with Python...
-  python -m http.server 8000
+  python -m http.server 8000 --bind 0.0.0.0
   exit /b %errorlevel%
 )
 

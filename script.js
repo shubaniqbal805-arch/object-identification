@@ -28,17 +28,118 @@
     countLabel: $('countLabel'),
     meta: $('meta'),
     summary: $('summary'),
+    sceneTitle: $('sceneTitle'),
+    sceneSummary: $('sceneSummary'),
     list: $('list'),
     threshold: $('threshold'),
     thresholdOut: $('thresholdOut'),
     modelSelect: $('modelSelect'),
+    customLabelsField: $('customLabelsField'),
+    customLabels: $('customLabels'),
+    applyLabelsBtn: $('applyLabelsBtn'),
   };
 
   const MAX_CANVAS_SIDE = 1600;
   const MAX_BOXES = 50;
+  const OPEN_VOCABULARY_LABELS = [
+    'person', 'child', 'dog', 'cat', 'bird', 'horse', 'cow', 'sheep', 'rabbit',
+    'tree', 'flower', 'potted plant', 'mushroom',
+    'bread', 'pizza', 'sandwich', 'hamburger', 'burger', 'hot dog', 'french fries',
+    'potato fries', 'ketchup', 'dipping sauce', 'sauce cup', 'food tray', 'food container',
+    'apple', 'banana', 'orange', 'strawberry', 'grapes', 'tomato', 'carrot', 'broccoli',
+    'cake', 'cookie', 'donut', 'croissant', 'taco', 'rice', 'pasta', 'egg', 'cheese',
+    'bottle', 'can', 'jar', 'cup', 'mug', 'glass', 'bowl', 'plate', 'fork', 'knife', 'spoon',
+    'chair', 'table', 'dining table', 'sofa', 'bed', 'desk', 'lamp', 'television',
+    'laptop', 'keyboard', 'computer mouse', 'mobile phone', 'book', 'backpack',
+    'suitcase', 'umbrella', 'shoe', 'hat', 'shirt', 'car', 'bus', 'truck', 'bicycle',
+    'motorcycle', 'airplane', 'boat', 'traffic light', 'stop sign', 'clock', 'toaster',
+    'refrigerator', 'microwave', 'sink', 'toilet', 'scissors', 'hammer', 'toothbrush',
+    'wallet', 'keys', 'watch', 'glasses', 'handbag', 'shopping bag', 'basket',
+    'box', 'package', 'bag', 'pencil', 'pen', 'marker', 'notebook', 'newspaper',
+    'magazine', 'newspaper', 'calendar', 'picture frame', 'mirror', 'window', 'door',
+    'bed', 'pillow', 'blanket', 'curtain', 'rug', 'stair', 'wall', 'floor', 'ceiling',
+    'fan', 'air conditioner', 'heater', 'smoke detector', 'camera', 'printer',
+    'charger', 'headphones', 'earphones', 'speaker', 'router', 'remote control',
+    'game controller', 'toy', 'teddy bear', 'ball', 'basketball', 'soccer ball',
+    'skateboard', 'bicycle', 'motorcycle', 'car', 'bus', 'truck', 'train',
+    'building', 'house', 'bridge', 'road', 'sign', 'fence', 'gate',
+    'body of water', 'mountain', 'sky', 'cloud', 'grass', 'rock',
+  ];
+  const USE_CATEGORIES = {
+    person: ['person', 'baby', 'child', 'woman', 'man'],
+    animal: [
+      'dog', 'cat', 'horse', 'cow', 'sheep', 'goat', 'pig', 'chicken', 'duck', 'bird', 'parrot',
+      'fish', 'turtle', 'snake', 'lizard', 'frog', 'rabbit', 'hamster', 'mouse', 'squirrel', 'deer',
+      'bear', 'lion', 'tiger', 'elephant', 'giraffe', 'zebra', 'monkey', 'penguin', 'dolphin',
+      'butterfly', 'bee', 'spider', 'insect',
+    ],
+    plant: ['tree', 'leaf', 'flower', 'rose', 'sunflower', 'potted plant', 'cactus'],
+    food: [
+      'bread', 'loaf of bread', 'baguette', 'croissant', 'donut', 'cake', 'cupcake', 'cookie',
+      'pizza', 'sandwich', 'hamburger', 'burger', 'hot dog', 'taco', 'french fries', 'potato fries',
+      'ketchup', 'dipping sauce', 'apple', 'banana', 'orange', 'strawberry', 'grapes', 'pineapple',
+      'watermelon', 'lemon', 'tomato', 'potato', 'carrot', 'broccoli', 'lettuce', 'onion',
+      'avocado', 'egg', 'cheese', 'milk', 'pasta', 'rice', 'bowl of soup',
+    ],
+    fungus: ['mushroom'],
+    furniture: ['chair', 'table', 'dining table', 'sofa', 'couch', 'bed', 'desk', 'bench'],
+    electronics: [
+      'television', 'tv', 'computer monitor', 'laptop', 'keyboard', 'computer mouse',
+      'mobile phone', 'cell phone', 'remote control',
+    ],
+    timekeeping: ['clock'],
+    vehicle: ['car', 'bus', 'truck', 'motorcycle', 'bicycle', 'airplane', 'boat', 'train'],
+    clothing: ['shoe', 'shoes', 'hat', 'shirt', 'jacket', 'pants', 'dress', 'tie'],
+    accessory: ['backpack', 'suitcase', 'umbrella', 'handbag', 'watch', 'glasses', 'keys', 'wallet'],
+    tool: [
+      'scissors', 'knife', 'hammer', 'screwdriver', 'wrench', 'saw',
+    ],
+    personalCare: ['toothbrush', 'hair dryer', 'hair drier'],
+    kitchenware: [
+      'coffee cup', 'bottle', 'can', 'jar', 'cup', 'mug', 'glass', 'wine glass', 'plate',
+      'fork', 'spoon', 'bowl', 'sink', 'sauce cup', 'food tray', 'food container',
+    ],
+    appliance: ['toaster', 'refrigerator', 'oven', 'microwave'],
+    sports: [
+      'skateboard', 'ball', 'sports ball', 'frisbee', 'skis', 'snowboard', 'kite', 'surfboard',
+      'baseball bat', 'baseball glove', 'tennis racket',
+    ],
+    container: ['vase'],
+    toy: ['teddy bear'],
+    infrastructure: ['traffic light', 'stop sign', 'fire hydrant', 'parking meter', 'toilet'],
+    reading: ['book', 'notebook', 'pen', 'pencil'],
+  };
+  const USE_NOTES = {
+    person: 'A person; this app does not infer a person\'s role, identity, or purpose.',
+    animal: 'Possible roles include companionship, assistance, farming, or wildlife; this depends on the species and context.',
+    plant: 'May provide food, shade, materials, decoration, or habitat. Do not eat a plant based only on an image label.',
+    food: 'May be eaten or used in a meal. Confirm the item and food safety before consuming it.',
+    fungus: 'Some fungi are edible and others are poisonous. Never eat one based only on an image label.',
+    furniture: 'Commonly used for sitting, sleeping, storage, or a work surface.',
+    electronics: 'May support communication, computing, media, or control, depending on the device.',
+    timekeeping: 'Commonly used to show or track the time.',
+    vehicle: 'Commonly used to transport people or goods.',
+    clothing: 'Worn for coverage, comfort, or protection from weather.',
+    accessory: 'Often used to carry, protect, secure, or complement personal items.',
+    tool: 'May be used for a specific task such as cutting, repair, or personal care. Follow relevant safety instructions.',
+    personalCare: 'Often used for personal hygiene or grooming.',
+    kitchenware: 'Often used to prepare, hold, serve, or consume food or drinks.',
+    appliance: 'Commonly used to prepare, heat, or store food.',
+    sports: 'May be used for sport, exercise, or recreation.',
+    container: 'Often used to hold, store, or display items.',
+    toy: 'Often used for play, comfort, or decoration.',
+    infrastructure: 'Supports public facilities, sanitation, or traffic management.',
+    reading: 'Often used for reading, writing, learning, or reference.',
+  };
+  const USE_CATEGORY_BY_LABEL = new Map();
+  for (const [category, labels] of Object.entries(USE_CATEGORIES)) {
+    labels.forEach((label) => USE_CATEGORY_BY_LABEL.set(label, category));
+  }
 
   const state = {
     model: null,
+    modelType: 'coco',
+    RawImage: null,
     modelRequest: 0,
     mode: 'upload',
     image: null,
@@ -47,6 +148,7 @@
     raf: 0,
     predictions: [],
     threshold: 0.6,
+    customLabels: [],
     metaText: 'Add an image or start the webcam.',
     fps: 0,
   };
@@ -72,34 +174,119 @@
     return `hsl(${hue} 80% ${lightness}%)`;
   }
 
+  function possibleUsesFor(label) {
+    const normalized = label.toLowerCase();
+    if (normalized === 'mouse') {
+      return 'Could mean a living animal or a computer input device; its use depends on the correct identification.';
+    }
+    const category = USE_CATEGORY_BY_LABEL.get(normalized);
+    return category
+      ? USE_NOTES[category]
+      : 'No use note is available for this label. Verify the identification and context.';
+  }
+
   function visiblePredictions() {
     return state.predictions
       .filter((p) => p.score >= state.threshold)
       .sort((a, b) => b.score - a.score);
   }
 
+  function currentSourceDimensions() {
+    if (state.mode === 'upload' && state.image) {
+      return { width: state.image.naturalWidth, height: state.image.naturalHeight };
+    }
+    if (state.mode === 'webcam' && els.video.videoWidth && els.video.videoHeight) {
+      return { width: els.video.videoWidth, height: els.video.videoHeight };
+    }
+    return null;
+  }
+
+  function locationAndAreaFor(prediction, dimensions) {
+    if (!dimensions || !dimensions.width || !dimensions.height) {
+      return 'Position and image area are unavailable.';
+    }
+
+    const [x, y, width, height] = prediction.bbox;
+    const centerX = Math.max(0, Math.min(1, (x + width / 2) / dimensions.width));
+    const centerY = Math.max(0, Math.min(1, (y + height / 2) / dimensions.height));
+    const horizontal = centerX < 1 / 3 ? 'left' : centerX < 2 / 3 ? 'center' : 'right';
+    const vertical = centerY < 1 / 3 ? 'upper' : centerY < 2 / 3 ? 'middle' : 'lower';
+    const position = horizontal === 'center' && vertical === 'middle'
+      ? 'center'
+      : `${vertical} ${horizontal}`;
+    const area = Math.max(0, Math.min(100, (width * height / (dimensions.width * dimensions.height)) * 100));
+    const areaText = area < 10 ? area.toFixed(1) : String(Math.round(area));
+
+    return `Position: ${position}. Approximate bounding-box area: ${areaText}% of the image.`;
+  }
+
+  function describeScene(predictions, metaText, dimensions) {
+    const sourceAvailable = state.mode === 'upload' ? !!state.image : state.running;
+    if (!sourceAvailable) {
+      return 'Upload an image or start the webcam to see detected contents.';
+    }
+    if (metaText === 'Analyzing…' || metaText.startsWith('Waiting for')
+      || metaText.startsWith('Wide-vocabulary analysis')) {
+      return metaText;
+    }
+
+    const size = dimensions
+      ? `Source dimensions: ${dimensions.width} × ${dimensions.height} pixels.`
+      : '';
+    if (predictions.length === 0) {
+      return `${size} No objects were detected at the current confidence level. Try lowering the minimum confidence.`
+        .trim();
+    }
+
+    const counts = new Map();
+    for (const prediction of predictions) {
+      counts.set(prediction.class, (counts.get(prediction.class) || 0) + 1);
+    }
+    const contents = [...counts.entries()]
+      .map(([name, count]) => `${name} × ${count}`)
+      .join(', ');
+    const total = predictions.length === 1 ? '1 object' : `${predictions.length} objects`;
+    return `${size} Detected ${total}: ${contents}.`.trim();
+  }
+
   async function loadModel(base) {
     const request = ++state.modelRequest;
     state.model = null;
+    const wideVocabulary = base === 'open_vocabulary';
+    state.modelType = wideVocabulary ? 'open_vocabulary' : 'coco';
+    state.threshold = wideVocabulary ? 0.15 : 0.6;
+    els.threshold.min = wideVocabulary ? '5' : '50';
+    els.threshold.step = '5';
+    els.threshold.value = String(state.threshold * 100);
+    els.thresholdOut.textContent = `${els.threshold.value}%`;
+    els.customLabelsField.hidden = !wideVocabulary;
     els.modelSelect.disabled = true;
-    setStatus('loading', 'Loading AI model…');
+    setStatus('loading', wideVocabulary ? 'Loading wide-vocabulary model…' : 'Loading AI model…');
 
     try {
-      if (typeof tf === 'undefined' || typeof cocoSsd === 'undefined') {
-        throw new Error('TensorFlow.js or COCO-SSD did not load. Check your internet connection.');
+      let model;
+      if (wideVocabulary) {
+        const { pipeline, RawImage } = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1');
+        model = await pipeline('zero-shot-object-detection', 'Xenova/owlv2-base-patch16-ensemble', { dtype: 'q4' });
+        if (request !== state.modelRequest) return;
+        state.RawImage = RawImage;
+      } else {
+        if (typeof tf === 'undefined' || typeof cocoSsd === 'undefined') {
+          throw new Error('TensorFlow.js or COCO-SSD did not load. Check your internet connection.');
+        }
+        await tf.ready();
+        model = await cocoSsd.load({ base });
       }
-      await tf.ready();
-      const model = await cocoSsd.load({ base });
       if (request !== state.modelRequest) return;
       state.model = model;
-      setStatus('ready', `Model ready (${tf.getBackend()} backend)`);
+      setStatus('ready', wideVocabulary ? 'Wide-vocabulary model ready' : `Model ready (${tf.getBackend()} backend)`);
       hideNotice();
       if (state.mode === 'upload' && state.image) detectImage();
     } catch (err) {
       if (request !== state.modelRequest) return;
       console.error(err);
       setStatus('error', 'Model failed to load');
-      showNotice('The AI model could not be loaded. Check your internet connection, then reload the page. ' + (err.message || ''));
+      showNotice('The AI model could not be loaded. Check your internet connection, then try selecting the model again. ' + (err.message || ''));
     } finally {
       if (request === state.modelRequest) els.modelSelect.disabled = false;
     }
@@ -159,6 +346,9 @@
     els.count.textContent = String(predictions.length);
     els.countLabel.textContent = predictions.length === 1 ? 'object detected' : 'objects detected';
     els.meta.textContent = metaText;
+    els.sceneTitle.textContent = state.mode === 'upload' ? 'Image overview' : 'Live scene overview';
+    const dimensions = currentSourceDimensions();
+    els.sceneSummary.textContent = describeScene(predictions, metaText, dimensions);
 
     const counts = new Map();
     for (const p of predictions) counts.set(p.class, (counts.get(p.class) || 0) + 1);
@@ -206,7 +396,15 @@
       fill.style.background = colorFor(p.class, 45);
       bar.appendChild(fill);
 
-      li.append(row, bar);
+      const useNote = document.createElement('p');
+      useNote.className = 'use-note';
+      useNote.textContent = `Possible uses: ${possibleUsesFor(p.class)}`;
+
+      const detail = document.createElement('p');
+      detail.className = 'detail-note';
+      detail.textContent = locationAndAreaFor(p, dimensions);
+
+      li.append(row, bar, detail, useNote);
       els.list.appendChild(li);
     }
   }
@@ -227,6 +425,52 @@
     els.clearBtn.disabled = !hasContent;
     els.chooseBtn.hidden = state.mode !== 'upload';
     els.camStopBtn.hidden = !(state.mode === 'webcam' && state.running);
+  }
+
+  async function detect(input) {
+    if (state.modelType === 'open_vocabulary') {
+      const sourceWidth = input.videoWidth || input.naturalWidth || input.width;
+      const sourceHeight = input.videoHeight || input.naturalHeight || input.height;
+      if (!sourceWidth || !sourceHeight || !state.RawImage) {
+        throw new Error('The image could not be prepared for wide-vocabulary detection.');
+      }
+
+      const scale = Math.min(1, MAX_CANVAS_SIDE / Math.max(sourceWidth, sourceHeight));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(sourceWidth * scale);
+      canvas.height = Math.round(sourceHeight * scale);
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('This browser could not prepare the image for detection.');
+      context.drawImage(input, 0, 0, canvas.width, canvas.height);
+
+      const labels = state.customLabels.length ? state.customLabels : OPEN_VOCABULARY_LABELS;
+      const prompts = labels.map((label) => `a photo of ${label}`);
+      const labelByPrompt = new Map(prompts.map((prompt, index) => [prompt, labels[index]]));
+      const image = state.RawImage.fromCanvas(canvas);
+      const results = await state.model(image, prompts, { threshold: 0.0001, top_k: MAX_BOXES });
+      const predictions = results.map((result) => ({
+        class: labelByPrompt.get(result.label) || result.label,
+        score: result.score,
+        bbox: [
+          result.box.xmin / scale,
+          result.box.ymin / scale,
+          (result.box.xmax - result.box.xmin) / scale,
+          (result.box.ymax - result.box.ymin) / scale,
+        ],
+      })).sort((a, b) => b.score - a.score);
+
+      return predictions.filter((prediction, index) => !predictions.slice(0, index).some((other) => {
+        const [ax, ay, aw, ah] = prediction.bbox;
+        const [bx, by, bw, bh] = other.bbox;
+        const intersection = Math.max(0, Math.min(ax + aw, bx + bw) - Math.max(ax, bx))
+          * Math.max(0, Math.min(ay + ah, by + bh) - Math.max(ay, by));
+        const union = aw * ah + bw * bh - intersection;
+        const overlap = union > 0 ? intersection / union : 0;
+        return overlap > 0.5
+          && (prediction.class === other.class || overlap > 0.85);
+      })).slice(0, MAX_BOXES);
+    }
+    return state.model.detect(input, MAX_BOXES);
   }
 
   function handleFile(file) {
@@ -266,10 +510,12 @@
       return;
     }
 
-    updateResults([], 'Analyzing…');
+    updateResults([], state.modelType === 'open_vocabulary'
+      ? 'Wide-vocabulary analysis can take tens of seconds…'
+      : 'Analyzing…');
     const started = performance.now();
     try {
-      const predictions = await model.detect(img, MAX_BOXES);
+      const predictions = await detect(img);
       if (model !== state.model || img !== state.image) return;
       state.predictions = predictions;
       const ms = Math.round(performance.now() - started);
@@ -334,7 +580,7 @@
     if (model && els.video.readyState >= 2) {
       const started = performance.now();
       try {
-        const predictions = await model.detect(els.video, MAX_BOXES);
+        const predictions = await detect(els.video);
         if (!state.running || model !== state.model) return;
         state.predictions = predictions;
         const ms = Math.max(1, performance.now() - started);
@@ -475,6 +721,20 @@
   });
 
   els.modelSelect.addEventListener('change', () => loadModel(els.modelSelect.value));
+  els.applyLabelsBtn.addEventListener('click', () => {
+    const labels = els.customLabels.value.split(/[,;\n]/).map((label) => label.trim()).filter(Boolean);
+    if (labels.length > 20) {
+      showNotice('Add up to 20 custom names at a time.');
+      return;
+    }
+    if (labels.some((label) => label.length > 80)) {
+      showNotice('Each custom name must be 80 characters or fewer.');
+      return;
+    }
+    state.customLabels = [...new Map(labels.map((label) => [label.toLowerCase(), label])).values()];
+    hideNotice();
+    if (state.mode === 'upload' && state.image) detectImage();
+  });
 
   window.addEventListener('pagehide', () => {
     if (state.stream) state.stream.getTracks().forEach((t) => t.stop());

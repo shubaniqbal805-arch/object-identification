@@ -237,10 +237,15 @@ h1 {
 .row .pct { font-variant-numeric: tabular-nums; color: var(--muted); }
 .bar { height: 5px; margin-top: 6px; background: var(--ground); border-radius: 3px; overflow: hidden; }
 .bar span { display: block; height: 100%; border-radius: 3px; }
+.scene-summary, .detail-note { color: var(--muted); font-size: 0.9rem; }
+.scene-summary { margin: 0 0 8px; }
+.detail-note { margin: 6px 0 0 18px; }
+.use-note { margin: 6px 0 0 18px; color: var(--muted); font-size: 0.84rem; }
 
 .field { margin-bottom: 14px; }
 .field label { display: flex; justify-content: space-between; font-weight: 600; font-size: 0.92rem; margin-bottom: 6px; }
-.field select { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); }
+.field select, .field input[type="text"] { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); }
+.field .btn { margin-top: 8px; }
 .field input[type="range"] { width: 100%; accent-color: var(--accent); }
 
 .fine { color: var(--muted); font-size: 0.85rem; margin: 0; max-width: 60ch; }

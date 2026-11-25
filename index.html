@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 
@@ -21,7 +21,7 @@
       </svg>
       <div>
         <h1>Object Identification System</h1>
-        <p>Find and count everyday objects in a photo or on your webcam. Everything runs in your browser.</p>
+        <p>Identify detected objects, see where they appear, and learn common possible uses. Everything runs in your browser.</p>
       </div>
     </div>
     <div class="status" id="status" data-state="loading" role="status" aria-live="polite">
@@ -43,7 +43,7 @@
       <div class="stage" id="paneUpload" role="tabpanel" aria-labelledby="tabUpload">
         <div class="empty" id="dropzone">
           <p class="empty-title">Drop an image here</p>
-          <p class="empty-hint">JPG, PNG, WebP or GIF. Your image stays on this device.</p>
+          <p class="empty-hint">JPG, PNG, WebP or GIF. See detected object names, locations, and possible uses. Your image stays on this device.</p>
           <button type="button" class="btn primary" id="dropBtn">Choose an image</button>
         </div>
         <canvas id="imageCanvas" hidden aria-label="Uploaded image with detected objects outlined"></canvas>
@@ -82,34 +82,46 @@
 
       <div class="chips" id="summary" aria-label="Count by type"></div>
 
-      <h2 class="section-title">Detections</h2>
+      <h2 class="section-title" id="sceneTitle">Image overview</h2>
+      <p class="scene-summary" id="sceneSummary" aria-live="polite">Upload an image to see its detected contents and image dimensions.</p>
+      <p class="fine">Locations and boxed areas are estimates. The model may miss objects or assign an incorrect label.</p>
+
+      <h2 class="section-title">Detections &amp; possible uses</h2>
+      <p class="fine">Use notes are general examples, not a guarantee that the detected label is correct.</p>
       <ol class="list" id="list">
         <li class="list-empty">Nothing yet.</li>
       </ol>
 
       <h2 class="section-title">Settings</h2>
       <div class="field">
-        <label for="threshold">Minimum confidence <output id="thresholdOut">60%</output></label>
-        <input type="range" id="threshold" min="50" max="95" step="5" value="60">
+        <label for="threshold">Minimum confidence <output id="thresholdOut">15%</output></label>
+        <input type="range" id="threshold" min="5" max="95" step="5" value="15">
       </div>
       <div class="field">
         <label for="modelSelect">Model</label>
         <select id="modelSelect">
-          <option value="lite_mobilenet_v2" selected>Fast (lite MobileNet v2)</option>
+          <option value="lite_mobilenet_v2">Fast (lite MobileNet v2)</option>
           <option value="mobilenet_v2">More accurate (MobileNet v2, slower)</option>
+          <option value="open_vocabulary" selected>Detailed — wider vocabulary (about 194 MB, slower)</option>
         </select>
       </div>
-      <p class="fine">The COCO-SSD model recognises 80 common object types such as people, cars, animals, furniture, food and electronics. Anything outside those types will not be labelled.</p>
+      <div class="field" id="customLabelsField">
+        <label for="customLabels">Focus on specific items (optional)</label>
+        <input type="text" id="customLabels" placeholder="e.g. burger, french fries, ketchup" aria-describedby="customLabelsHelp">
+        <button type="button" class="btn" id="applyLabelsBtn">Update names</button>
+        <p class="fine" id="customLabelsHelp">Separate names with commas. Enter up to 20 specific items to focus the detector; leave blank to search the built-in list, including foods and everyday objects.</p>
+      </div>
+      <p class="fine">Fast and More accurate use COCO-SSD's 80 classes. Wider vocabulary can find other named objects but downloads a larger model and may return incorrect labels. No mode can guarantee every item will be found.</p>
     </aside>
 
   </main>
 
   <footer class="foot">
-    Built with TensorFlow.js and the COCO-SSD model. No account, server or paid service is involved.
+    Built with TensorFlow.js, COCO-SSD and Transformers.js. No account, server or paid service is involved.
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
-  <script src="script.js"></script>
+  <script src="script.js?v=16"></script>
 </body>
 </html>
